@@ -63,11 +63,5 @@ def main():
 	stockData = YahooStock('data-STI.csv', '^STI')
 	stockData.update()
 
-	stockData = YahooStock('data-GSPC.csv', '^GSPC')
-	stockData.update()
-	
-	stockData = YahooStock('data-DJI.csv', '^DJI')
-	stockData.update()
-
 if __name__ == "__main__":
 	main()
