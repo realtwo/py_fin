@@ -12,7 +12,8 @@ def main():
 			return 1
 		return 0
 
-	data['should_buy'] = data['reward'].apply(should_buy, args=(3, ))
+	threshold_to_buy = 3
+	data['should_buy'] = data['reward'].apply(should_buy, args=(threshold_to_buy, ))
 
 	print "Total number of data points: {}".format(len(data))
 	print "Number of data that should trigger buy: {}".format(data[data.should_buy==1].shape[0]) 
