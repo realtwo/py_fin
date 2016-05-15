@@ -281,42 +281,6 @@ class Data(object):
 		fp.close
 
 
-def do_time_series(fname):
-	import statsmodels.tsa.api as tsa
-	import matplotlib.pyplot as plt
-
-	# ARMA model
-	data_in = df.ix[0:2200, 'close'].values
-	data_in = p_ma20.iloc[0:2000].dropna().values
-
-	print len(data_in)
-
-	arma =tsa.ARMA(data_in, order =(2,2))
-	model = arma.fit()
-
-	start_pos = max(model.k_ar, model.k_ma)
-
-	p_arma2 = []
-	for t in range(start_pos, len(data_in)):
-		value = 0
-		if t<len(data_in):
-			for i in range(1, model.k_ar + 1):
-				value += model.arparams[i - 1] * data_in[t-i]
-			for i in range(1, model.k_ma + 1):
-				value += model.maparams[i - 1] * data_in[t-i]
-		else:
-			for i in range(1, model.k_ar + 1):
-				value += model.arparams[i - 1] * p_arma2[len(p_arma2)-i]
-			for i in range(1, model.k_ma + 1):
-				value += model.maparams[i - 1] * p_arma2[len(p_arma2)-i]	
-		p_arma2.append(value)
-
-	p_arma2 = model.predict(start_pos, 2200)
-
-	plt.plot(data_in)
-	plt.plot(p_arma2, 'r')
-	plt.show()
-
 def main():
 	
 	counter = 'STI'
@@ -336,18 +300,9 @@ def main():
 
 	data.close_data_log() # close both raw and training data
 
-	#data.verify_files()
+	data.verify_files()
 
-	#print data.df
-	#print data.df.info()
 
-	df = data.df
-	df.ma_5.plot()
-	df.ma_10.plot()
-	df.ma_20.plot()
-	df.ma_60.plot()
-	#trend = df.trend_ma60*1000+1000
-	#trend.plot()
 
 
 if __name__ == "__main__":
