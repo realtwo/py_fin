@@ -48,9 +48,17 @@ def main():
 	# drop adj_close
 	data = data.drop(['adj_close_0', 'adj_close_1', 'adj_close_2', 'adj_close_3'], axis=1)
 
+	from sklearn.cross_validation import StratifiedShuffleSplit
+	import numpy as np
+	y = np.array([0, 0, 0, 0, 0, 0, 1, 1,1, 1])
+	
+	sss = StratifiedShuffleSplit(y, n_iter=1, test_size=0.3, random_state=0)
+	for train_index, test_index in sss:
+		print train_index
+		print test_index
 
 
-	print data.head(5)
+	#print data.head(5)
 
 	print 'Done!'
 
