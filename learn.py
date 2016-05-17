@@ -1,14 +1,28 @@
 
 import pandas as pd
+from sklearn.metrics import precision_score, recall_score
 
 def performance_metric(y_true, y_pred):
-	from sklearn.metrics import precision_score, recall_score
 	w=0.5
 	w = w**2
 	p = precision_score(y_true, y_pred, average='micro') 
 	r = recall_score(y_true, y_pred, average='micro') 
 	f = (1+w)*p*r/(w*p+r)
 	return f
+
+def fit_and_predict(clf, x_train, y_train, x_test):
+	clf.fit(x_train, y_train)
+	y_pred = clf.predict(x_test)
+	return y_pred
+
+def evaluate_model(clf, x_train, y_train, x_test, y_test):
+
+	y_pred = fit_and_predict(clf, x_train, y_train, x_test)
+		
+	print '----------------------'
+	print clf 
+	print "precision: {}".format(precision_score(y_test, y_pred))
+	print "recall: {}".format(recall_score(y_test, y_pred))
 
 def main():
 	
@@ -23,17 +37,11 @@ def main():
 
 	threshold_to_buy = 3
 	data['should_buy'] = data['reward'].apply(should_buy, args=(threshold_to_buy, ))
-
+	
+	# Data is unbalanced
 	print "Total number of data points: {}".format(len(data))
 	print "Number of data that should trigger buy: {}".format(data[data.should_buy==1].shape[0]) 
 	print "Number of data that should not trigger buy: {}".format(data[data.should_buy==0].shape[0])
-
-
-	# Data is unbalanced
-	# how to do CV
-
-
-	print data.head(5)
 
 	# drop volume, as more than half are missing
 	print data['vol_0'].describe()
@@ -54,23 +62,31 @@ def main():
 	x_all = data[feature_cols]
 	y_all = data[target_col]
 
-	print x_all.head()
-	print y_all.head()
+	x_all = x_all.sub(x_all['open_0'], axis=0)
 
+	x_all = x_all.drop(['open_0'], axis=1)
 
 	from sklearn.cross_validation import StratifiedShuffleSplit
-	
-	sss = StratifiedShuffleSplit(y_all, n_iter=1, test_size=0.3, random_state=0)
+	sss = StratifiedShuffleSplit(y_all, n_iter=5, test_size=0.3, random_state=0)
 	for train_index, test_index in sss:
 		x_train = x_all.iloc[train_index]
 		y_train = y_all.iloc[train_index]
 		x_test = x_all.iloc[test_index]
 		y_test = y_all.iloc[test_index]
 
-		print x_train
-		print y_train
-		
+		from sklearn.ensemble import AdaBoostClassifier
+		clf = AdaBoostClassifier()
+		evaluate_model(clf, x_train, y_train, x_test, y_test)
 
+		from sklearn.linear_model import LogisticRegression
+		clf = LogisticRegression()
+		evaluate_model(clf, x_train, y_train, x_test, y_test)
+
+		from sklearn.ensemble import RandomForestClassifier
+		clf = RandomForestClassifier()
+		evaluate_model(clf, x_train, y_train, x_test, y_test)
+
+		print '============================================='
 	print 'Done!'
 
 if __name__ == "__main__":
