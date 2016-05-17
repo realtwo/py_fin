@@ -59,14 +59,17 @@ def main():
 
 
 	from sklearn.cross_validation import StratifiedShuffleSplit
-	import numpy as np
-	y = np.array([0, 0, 0, 0, 0, 0, 1, 1,1, 1])
 	
-	sss = StratifiedShuffleSplit(y, n_iter=1, test_size=0.3, random_state=0)
+	sss = StratifiedShuffleSplit(y_all, n_iter=1, test_size=0.3, random_state=0)
 	for train_index, test_index in sss:
-		print train_index
-		print test_index
+		x_train = x_all.iloc[train_index]
+		y_train = y_all.iloc[train_index]
+		x_test = x_all.iloc[test_index]
+		y_test = y_all.iloc[test_index]
 
+		print x_train
+		print y_train
+		
 
 	print 'Done!'
 
