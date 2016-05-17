@@ -252,13 +252,68 @@ class Data(object):
 		print "Done writing %d data to train and validation files." %(i-self.days_back+1)
 
 	def build_all(self):
-		# read all data into mem
 		
 		self.cal_all_ma([5,10,20,60])
 
-		self.read_all_in_mem()
-		self.build_train_val()
-		self.build_test()
+
+		## RSI calculation
+		self.df['change'] = self.df['close'] - self.df['close'].shift()
+
+		def get_positive(x):
+			if x>0:
+				return x
+			return 0
+
+		def get_negative(x):
+			if x<0:
+				return -x
+			return 0
+
+		self.df['gain'] = self.df['change'].apply(get_positive)	
+		self.df['loss'] = self.df['change'].apply(get_negative)
+
+		print self.df.ix[1:5, 'gain']
+
+		def cal_weighted_avg(df, colname, p=14):
+			colout = 'avg_'+colname
+			for i in xrange(0, df.shape[0]):
+				if i<p:
+					series = df.ix[0:i, colname]
+					df.ix[i, colout] = series.mean()
+				else:
+					df.ix[i, colout] = ((p-1)*df.ix[i-1, colout] + df.ix[i, colname])/p
+				#print series
+				
+			return df
+
+		def cal_rsi(df, p=14):
+			df = cal_weighted_avg(df = df, colname = 'gain', p=14)
+			df = cal_weighted_avg(df = df, colname = 'loss', p=14)
+			for i in xrange(0, df.shape[0]):
+				g = df.ix[i, 'avg_gain']
+				l = df.ix[i, 'avg_loss']
+				if l == 0:
+					if g == 0:
+						rsi = 50
+					else:
+						rsi = 100
+				else:
+					rsi = 100 - 100/(1+g/l)
+
+				df.ix[i, 'rsi'] = rsi
+				
+			return df
+
+		
+		self.df = cal_rsi(df=self.df, p=14)
+
+		print self.df
+
+		## read all data into mem, process by index of the day
+
+		#self.read_all_in_mem()
+		#self.build_train_val()
+		#self.build_test()
 
 		
 	def verify_files(self):
