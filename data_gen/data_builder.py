@@ -99,6 +99,51 @@ class Data(object):
 		#df.to_csv(self.filename, index=False)
 		self.df = df
 
+	def cal_rsi(self, period=14):
+		## RSI calculation
+		self.df['change'] = self.df['close'] - self.df['close'].shift()
+
+		def get_positive(x):
+			if x>0:
+				return x
+			return 0
+
+		def get_negative(x):
+			if x<0:
+				return -x
+			return 0
+
+		self.df['gain'] = self.df['change'].apply(get_positive)	
+		self.df['loss'] = self.df['change'].apply(get_negative)
+
+		def cal_weighted_avg(df, colname, p=period):
+			colout = 'avg_'+colname
+			for i in xrange(0, df.shape[0]):
+				if i<p:
+					series = df.ix[0:i, colname]
+					df.ix[i, colout] = series.mean()
+				else:
+					df.ix[i, colout] = ((p-1)*df.ix[i-1, colout] + df.ix[i, colname])/p
+				#print series
+				
+			return df
+
+		self.df = cal_weighted_avg(df = self.df, colname = 'gain', p=period)
+		self.df = cal_weighted_avg(df = self.df, colname = 'loss', p=period)
+		for i in xrange(0, self.df.shape[0]):
+			g = self.df.ix[i, 'avg_gain']
+			l = self.df.ix[i, 'avg_loss']
+			if l == 0:
+				if g == 0:
+					rsi = 50
+				else:
+					rsi = 100
+			else:
+				rsi = 100 - 100/(1+g/l)
+			self.df.ix[i, 'rsi'] = rsi
+		self.df = self.df.drop(['change', 'gain', 'loss', 'avg_gain', 'avg_loss'], axis=1)
+
+
 	def _cal_raw_feature(self, day_idx):
 		data_feature = []
 		for j in range(day_idx-self.days_back, day_idx):
@@ -170,6 +215,9 @@ class Data(object):
 			elif v == 'ma_60':
 				p_ma60 = self._get_val_from_df(day_idx-2, v)
 				data_feature.append(p_ma60)
+			elif v == 'rsi':
+				rsi = self._get_val_from_df(day_idx-2, v)
+				data_feature.append(rsi)
 			else:
 				#print 'Feature: %s: baseline, or unhandled!' %v	
 				pass
@@ -195,6 +243,7 @@ class Data(object):
 			line2 = ",vol_"+str(i)+",adj_close_"+str(i)
 			line += line2
 		line += ",ma_5,ma_10,ma_20,ma_60"
+		line +=",rsi"
 
 		print line
 		return line
@@ -254,66 +303,14 @@ class Data(object):
 	def build_all(self):
 		
 		self.cal_all_ma([5,10,20,60])
-
-
-		## RSI calculation
-		self.df['change'] = self.df['close'] - self.df['close'].shift()
-
-		def get_positive(x):
-			if x>0:
-				return x
-			return 0
-
-		def get_negative(x):
-			if x<0:
-				return -x
-			return 0
-
-		self.df['gain'] = self.df['change'].apply(get_positive)	
-		self.df['loss'] = self.df['change'].apply(get_negative)
-
-		print self.df.ix[1:5, 'gain']
-
-		def cal_weighted_avg(df, colname, p=14):
-			colout = 'avg_'+colname
-			for i in xrange(0, df.shape[0]):
-				if i<p:
-					series = df.ix[0:i, colname]
-					df.ix[i, colout] = series.mean()
-				else:
-					df.ix[i, colout] = ((p-1)*df.ix[i-1, colout] + df.ix[i, colname])/p
-				#print series
-				
-			return df
-
-		def cal_rsi(df, p=14):
-			df = cal_weighted_avg(df = df, colname = 'gain', p=14)
-			df = cal_weighted_avg(df = df, colname = 'loss', p=14)
-			for i in xrange(0, df.shape[0]):
-				g = df.ix[i, 'avg_gain']
-				l = df.ix[i, 'avg_loss']
-				if l == 0:
-					if g == 0:
-						rsi = 50
-					else:
-						rsi = 100
-				else:
-					rsi = 100 - 100/(1+g/l)
-
-				df.ix[i, 'rsi'] = rsi
-				
-			return df
-
 		
-		self.df = cal_rsi(df=self.df, p=14)
-
-		print self.df
+		self.cal_rsi(period=14)
 
 		## read all data into mem, process by index of the day
 
-		#self.read_all_in_mem()
-		#self.build_train_val()
-		#self.build_test()
+		self.read_all_in_mem()
+		self.build_train_val()
+		self.build_test()
 
 		
 	def verify_files(self):
@@ -357,8 +354,8 @@ def main():
 
 	data.verify_files()
 
-
-
+	df = pd.read_csv("data_train.csv")
+	print df 
 
 if __name__ == "__main__":
 	main()
