@@ -23,6 +23,7 @@ def evaluate_model(clf, x_train, y_train, x_test, y_test):
 	print clf 
 	print "precision: {}".format(precision_score(y_test, y_pred))
 	print "recall: {}".format(recall_score(y_test, y_pred))
+	print "F-score: {}".format(performance_metric(y_true=y_test, y_pred=y_pred))
 
 def main():
 	
