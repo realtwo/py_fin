@@ -19,13 +19,28 @@ class DataWeekly(object):
 		self.data_count = 0
 		
 
-
 	def print_rules(self):
 		rule = "Sell when max hold day is reached, \n"
 		rule += "Price is based on closing \n"
 		print "------------- RULES -----------------"
 		print rule
 		print "-------------------------------------"
+
+	def cal_return(self, day_shift, col_name):
+		tmp = self.df['adj_close'] - self.df['adj_close'].shift(day_shift)
+		self.df[col_name] = 100.0*tmp/self.df['adj_close'].shift(day_shift)
+
+	def cal_reward(self):
+		col_name = 'reward'
+		day_shift = 4
+		self.cal_return(day_shift = day_shift, col_name=col_name)
+		self.df[col_name] = self.df[col_name].shift(-day_shift)
+
+	def build_features_price(self):
+		for col_base in ['open', 'high', 'low', 'close']:
+			for i in xrange(1,4):
+				col_name = col_base+ '_' + str(i)	
+				self.df[col_name] = self.df[col_base].shift(i)
 
 	
 def main():
@@ -41,7 +56,13 @@ def main():
 
 	data = DataWeekly(fname)
 	
-	data.print_rules()
+	data.cal_reward()
+
+	data.build_features_price()
+
+	data.df = data.df.drop(['date', 'adj_close', 'vol'], axis=1)
+
+	print data.df
 	
 
 if __name__ == "__main__":
