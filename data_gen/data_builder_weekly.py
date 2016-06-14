@@ -42,7 +42,21 @@ class DataWeekly(object):
 				col_name = col_base+ '_' + str(i)	
 				self.df[col_name] = self.df[col_base].shift(i)
 
-	
+	def build_features_and_labels(self):
+		self.cal_reward()
+
+		self.build_features_price()
+
+		self.df.dropna(inplace=True)
+
+		self.labels = self.df['reward']
+
+		self.features = self.df.drop(['date', 'adj_close', 'vol', 'reward'], axis=1)
+
+	def export(self, fname = "data.csv"):
+		tmp = pd.concat([self.labels, self.features], axis=1)
+		tmp.to_csv(fname, index=False)
+
 def main():
 	
 	counter = 'STI'
@@ -56,13 +70,13 @@ def main():
 
 	data = DataWeekly(fname)
 	
-	data.cal_reward()
+	data.build_features_and_labels()
 
-	data.build_features_price()
+	print data.features
+	print data.labels
 
-	data.df = data.df.drop(['date', 'adj_close', 'vol'], axis=1)
-
-	print data.df
+	data.export("data2.csv")
+	print "Done!"
 	
 
 if __name__ == "__main__":
