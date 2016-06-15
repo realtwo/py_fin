@@ -25,7 +25,9 @@ def format_x_y(fname="data2.csv", threshold_to_buy=1.5):
 	return x_all, y_all
 
 def print_stats(x_all, y_all):
-	print "Total number of data points: {}".format(len(x_all))
+	print "Total number of data points: {}".format(x_all.shape[0])
+	print "Total number of featuers: {}".format(x_all.shape[1])
+	print "Features: {}".format(x_all.columns.values)
 	print "Number of data that should trigger buy: {}".format(y_all[y_all==1].shape[0]) 
 	print "Number of data that should trigger buy: {}".format(y_all[y_all==0].shape[0]) 	
 

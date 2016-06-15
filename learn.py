@@ -44,17 +44,9 @@ def main():
 		clf = AdaBoostClassifier()
 		evaluate_model(clf, x_train, y_train, x_test, y_test)
 
-		#from sklearn.linear_model import LogisticRegression
-		#clf = LogisticRegression()
-		#evaluate_model(clf, x_train, y_train, x_test, y_test)
-
-		#from sklearn.ensemble import RandomForestClassifier
-		#clf = RandomForestClassifier()
-		#evaluate_model(clf, x_train, y_train, x_test, y_test)
-
-		#from sklearn.neural_network import MLPClassifier
-		#clf = MLPClassifier()		
-		#evaluate_model(clf, x_train, y_train, x_test, y_test)
+		from sklearn.ensemble import RandomForestClassifier
+		clf = RandomForestClassifier()
+		evaluate_model(clf, x_train, y_train, x_test, y_test)
 
 		print '============================================='
 	print 'Done!'
